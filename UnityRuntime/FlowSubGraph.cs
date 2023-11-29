@@ -15,7 +15,7 @@ namespace Flow
         public string Name;
         public bool AllowStageNode;
         public Vector3 Position;
-        public float Scale;
+        public Vector3 Scale;
         public List<FlowNodeRef> Nodes = new List<FlowNodeRef>();
         public List<FlowNodeViewData> NodeViews = new List<FlowNodeViewData>();
         public List<FlowEdgeData> Edges = new List<FlowEdgeData>();

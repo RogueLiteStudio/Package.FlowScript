@@ -30,5 +30,21 @@
                 }
             }
         }
+
+        public static void RemoveInvalidEdge(FlowGraph graph)
+        {
+            foreach (var sub in graph.SubGraphs)
+            {
+                foreach (var nodeRef in sub.Nodes)
+                {
+                    int maxInPort = nodeRef.Node.Data is IFlowInputable ? 0 : -1;
+                    int maxOutPort = nodeRef.Node.Data is IFlowOutputable ? 0 : -1;
+                    if (nodeRef.Node.Data is IFlowConditionable)
+                        maxOutPort = 1;
+                    sub.Edges.RemoveAll(it => (it.FromeNode == nodeRef.Node.GUID && it.OutPort > maxOutPort) 
+                    || (it.ToNode == nodeRef.Node.GUID && it.InPort > maxInPort));
+                }
+            }
+        }
     }
 }

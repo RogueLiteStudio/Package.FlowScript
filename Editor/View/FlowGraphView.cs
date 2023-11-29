@@ -13,8 +13,5 @@ namespace Flow
             this.AddManipulator(new RectangleSelector());
             SetupZoom(0.1f, 5f);
         }
-
     }
-
-
 }

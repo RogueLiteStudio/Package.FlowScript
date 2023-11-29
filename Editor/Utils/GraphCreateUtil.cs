@@ -5,11 +5,6 @@ namespace Flow
 {
     public class GraphCreateUtil
     {
-        public static void RegisterUndo(FlowGraph graph, string name )
-        {
-            Undo.RegisterCompleteObjectUndo(graph, name);
-            EditorUtility.SetDirty(graph);
-        }
 
         public static FlowSubGraph CreateSubGraph(FlowGraph graph, bool allowStageNode)
         {
@@ -67,8 +62,17 @@ namespace Flow
             subGraph.Owner.GraphBinds.Add(bind);
         }
 
-        public static FlowEdgeData CreateEdge(FlowSubGraph subGraph, FlowNode from, int outPort, FlowNode to, int inPort)
+        public static FlowEdgeData CreateEdge(FlowSubGraph subGraph, string fromNodeGUID, int outPort, string toNodeGUID, int inPort)
         {
+            if (inPort > 0)
+                return null;
+            var from = subGraph.Owner.FindNode(fromNodeGUID);
+            var to = subGraph.Owner.FindNode(toNodeGUID);
+            int maxOutPort = to is IFlowConditionable ? 1 : 0;
+            if (outPort > maxOutPort)
+                return null;
+            if (from.Data is not IFlowOutputable || to is not IFlowInputable)
+                return null;
             if (!subGraph.HasNode(from) || subGraph.HasNode(to))
                 return null;
             var edge = subGraph.FindEdge(from.GUID, outPort, to.GUID, inPort);
