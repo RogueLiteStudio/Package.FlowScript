@@ -2,6 +2,7 @@
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEditor;
 
 namespace Flow
 {
@@ -9,10 +10,49 @@ namespace Flow
     {
         public FlowSubGraph Graph;
         public FlowGraphView View;
+        public List<FlowNodeRef> SelectNodes = new List<FlowNodeRef>();
+        [SerializeField]
+        private EditorWindow window;
 
         private readonly List<FlowNodeView> nodeViews = new List<FlowNodeView>();
         private readonly List<Edge> edgeViews = new List<Edge>();
 
+        private List<System.Type> nodeTypes;
+
+        public IReadOnlyList<System.Type> NodeTypes
+        {
+            get
+            {
+                if (nodeTypes == null)
+                {
+                    nodeTypes = new List<System.Type>();
+                    foreach (var assemble in System.AppDomain.CurrentDomain.GetAssemblies())
+                    {
+                        foreach (var type in assemble.GetTypes())
+                        {
+                            if (type.IsInterface || type.IsAbstract)
+                                continue;
+
+                        }
+                    }
+                }
+                return nodeTypes;
+            }
+        }
+
+        public FlowNode CreateNode(System.Type type, Vector2 position)
+        {
+            IFlowNodeData nodeData = System.Activator.CreateInstance(type) as IFlowNodeData;
+            FlowNode node = GraphCreateUtil.CreateNode(Graph, nodeData, new Rect(position, new Vector2(100, 100)));
+            if (node != null)
+            {
+                var nodeView = new FlowNodeView();
+                View.AddElement(nodeView);
+                nodeView.BindNode(this, node);
+                nodeViews.Add(nodeView);
+            }
+            return node;
+        }
 
         public void RefreshView()
         {
@@ -24,6 +64,10 @@ namespace Flow
                 {
                     View.RemoveElement(nodeView);
                     nodeViews.RemoveAt(i);
+                }
+                else
+                {
+                    nodeView.selected = SelectNodes.Exists(IT => IT.GUID == nodeView.viewDataKey);
                 }
             }
             //创建
@@ -41,6 +85,7 @@ namespace Flow
                 {
                     nodeView.RefreshNodeView(nodeRef.Node);
                 }
+                nodeView.selected = SelectNodes.Exists(IT => IT.GUID == nodeView.viewDataKey);
             }
             //删除不存在或者不匹配的
             for (int i = edgeViews.Count - 1; i >= 0; --i)

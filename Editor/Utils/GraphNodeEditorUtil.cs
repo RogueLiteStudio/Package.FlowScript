@@ -16,7 +16,19 @@ namespace Flow
 
         public static void OnNodeSelected(FlowGraphEditor graphEditor, string nodeGUID, bool selected)
         {
-
+            var index = graphEditor.Graph.Nodes.FindIndex(it => it.GUID == nodeGUID);
+            if (index >= 0)
+            {
+                var nodeRef = graphEditor.Graph.Nodes[index];
+                if (selected)
+                {
+                    graphEditor.SelectNodes.Add(nodeRef);
+                }
+                else
+                {
+                    graphEditor.SelectNodes.Remove(nodeRef);
+                }
+            }
         }
 
         public static void DeleteNode(FlowGraphEditor graphEditor, string nodeGUID)

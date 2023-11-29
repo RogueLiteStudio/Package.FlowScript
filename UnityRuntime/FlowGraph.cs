@@ -38,5 +38,10 @@ namespace Flow
         {
             return Nodes.Exists(it => it.GUID == guid);
         }
+
+        public virtual bool CheckIsValidNodeType(System.Type type)
+        {
+            return false;
+        }
     }
 }
