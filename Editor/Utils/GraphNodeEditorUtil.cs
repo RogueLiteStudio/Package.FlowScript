@@ -6,12 +6,22 @@ namespace Flow
     {
         public static void OnNodePosition(FlowGraphEditor graphEditor, string nodeGUID, Rect position)
         {
-
+            var nodeView = graphEditor.Graph.NodeViews.Find(it => it.NodeGUID == nodeGUID);
+            if (nodeView != null)
+            {
+                GraphEditorUtil.RegisterUndo(graphEditor.Graph.Owner, "move node");
+                nodeView.Position = position;
+            }
         }
 
         public static void OnNodeExpanded(FlowGraphEditor graphEditor, string nodeGUID, bool expanded)
         {
-
+            var nodeView = graphEditor.Graph.NodeViews.Find(it => it.NodeGUID == nodeGUID);
+            if (nodeView != null)
+            {
+                GraphEditorUtil.RegisterUndo(graphEditor.Graph.Owner, "node expanded");
+                nodeView.Expanded = expanded;
+            }
         }
 
         public static void OnNodeSelected(FlowGraphEditor graphEditor, string nodeGUID, bool selected)

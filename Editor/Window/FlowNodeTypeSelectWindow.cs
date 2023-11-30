@@ -37,14 +37,30 @@ namespace Flow
         protected FlowGraphEditor editor;
         [SerializeField]
         private EditorWindow window;
+        private Texture2D icon;
         private List<SearchTreeEntry> tree;
 
         public static T Create<T>(FlowGraphEditor editor, EditorWindow window) where T : FlowNodeTypeSelectWindow
         {
             var w = CreateInstance<T>();
+            w.hideFlags = HideFlags.HideAndDontSave;
             w.editor = editor;
             w.window = window;
+
+            w.icon = new Texture2D(1, 1);
+            w.icon.SetPixel(0, 0, new Color(0, 0, 0, 0));
+            w.icon.Apply();
+
             return w;
+        }
+
+        private void OnDestroy()
+        {
+            if (icon != null)
+            {
+                DestroyImmediate(icon);
+                icon = null;
+            }
         }
 
         public List<SearchTreeEntry> CreateSearchTree(SearchWindowContext context)
@@ -56,6 +72,9 @@ namespace Flow
             List<string> tmpList = new List<string>();
             foreach (var type in editor.NodeTypes)
             {
+                //隐藏节点不允许创建
+                if (type.GetCustomAttribute<FlowHiddenInNodeCreateAttribute>() != null)
+                    continue;
                 var dpName = type.GetCustomAttribute<FlowNodeNameAttribute>(false);
                 string name = dpName == null ? type.Name : string.Format("{0}({1})", dpName.Name, type.Name);
                 tmpList.Clear();
@@ -80,20 +99,23 @@ namespace Flow
             return tree;
         }
 
-        private static void BuildTree(NodeTypeTree tree, int level, List<SearchTreeEntry> entries)
+        private void BuildTree(NodeTypeTree tree, int level, List<SearchTreeEntry> entries)
         {
+            entries.Add(new SearchTreeGroupEntry(new GUIContent(tree.Name), level));
+
             var sortChildren = tree.Children.OrderBy(it => it.Name);
             foreach (var child in sortChildren)
             {
                 BuildTree(child, level + 1, entries);
             }
-            var sortTypes = tree.Types.OrderBy(it=>it.Name);
+
+            var sortTypes = tree.Types.OrderBy(it => it.Name);
             foreach (var t in sortTypes)
             {
-                entries.Add(new SearchTreeEntry(new GUIContent(t.Name))
+                entries.Add(new SearchTreeEntry(new GUIContent(t.Name, icon))
                 {
                     level = level + 1,
-                    userData = t
+                    userData = t.Type
                 });
             }
         }

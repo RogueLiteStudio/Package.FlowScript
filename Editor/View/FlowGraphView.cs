@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 
@@ -12,6 +14,16 @@ namespace Flow
             this.AddManipulator(new SelectionDragger());
             this.AddManipulator(new RectangleSelector());
             SetupZoom(0.1f, 5f);
+        }
+
+        // ！！！！狗日的没有默认行为，必须重写！！！！
+        public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
+        {
+            return
+                ports
+                    .ToList()
+                    .Where(endPort => endPort.direction != startPort.direction && endPort.node != startPort.node)
+                    .ToList();
         }
     }
 }

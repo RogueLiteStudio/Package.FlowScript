@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Reflection;
+using UnityEditor;
 using UnityEngine;
 
 namespace Flow
@@ -24,6 +25,12 @@ namespace Flow
             { 
                 GUID = System.Guid.NewGuid().ToString(),
             };
+            var nameAttri = data.GetType().GetCustomAttribute<FlowNodeNameAttribute>();
+            if (nameAttri != null)
+                node.Name = nameAttri.Name;
+            else
+                node.Name = data.GetType().Name;
+
             node.SetData(data);
 
             subGraph.Owner.Nodes.Add(node);
@@ -68,12 +75,12 @@ namespace Flow
                 return null;
             var from = subGraph.Owner.FindNode(fromNodeGUID);
             var to = subGraph.Owner.FindNode(toNodeGUID);
-            int maxOutPort = to is IFlowConditionable ? 1 : 0;
+            int maxOutPort = from.Data is IFlowConditionable ? 1 : 0;
             if (outPort > maxOutPort)
                 return null;
-            if (from.Data is not IFlowOutputable || to is not IFlowInputable)
+            if (from.Data is not IFlowOutputable || to.Data is not IFlowInputable)
                 return null;
-            if (!subGraph.HasNode(from) || subGraph.HasNode(to))
+            if (!subGraph.HasNode(from) || !subGraph.HasNode(to))
                 return null;
             var edge = subGraph.FindEdge(from.GUID, outPort, to.GUID, inPort);
             if (edge == null)

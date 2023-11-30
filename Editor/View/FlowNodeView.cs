@@ -10,6 +10,12 @@ namespace Flow
         public FlowPortView[] InputPorts { get; private set; }
         public FlowPortView[] OutputPorts { get; private set; }
 
+        private static readonly string baseNodeStyle = "FlowGraphStyles/NodeView";
+        public FlowNodeView()
+        {
+            styleSheets.Add(Resources.Load<StyleSheet>(baseNodeStyle));
+        }
+
         public void RefreshNodeView(FlowNode node)
         {
             title = node.Name;
@@ -42,6 +48,7 @@ namespace Flow
                 trueView.NodeGUID = node.GUID;
                 trueView.Index = 0;
                 trueView.portName = "True";
+                trueView.visualClass = "Port_True";
                 outputContainer.Add(trueView);
 
                 var falseView = new FlowPortView(false);
@@ -49,7 +56,8 @@ namespace Flow
                 falseView.GraphEditor = graphEditor;
                 falseView.NodeGUID = node.GUID;
                 falseView.Index = 0;
-                falseView.portName = "True";
+                falseView.portName = "False";
+                falseView.visualClass = "Port_False";
                 outputContainer.Add(falseView);
                 OutputPorts = new FlowPortView[] { trueView, falseView };
             }

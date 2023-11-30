@@ -11,9 +11,9 @@ namespace Flow
     {
         public FlowSubGraph Graph;
         public FlowGraphView View;
+        public EditorWindow window;
+        private FlowNodeCreateWindow nodeCreateWindow;
         public List<FlowNodeRef> SelectNodes = new List<FlowNodeRef>();
-        [SerializeField]
-        private EditorWindow window;
 
         private readonly List<FlowNodeView> nodeViews = new List<FlowNodeView>();
         private readonly List<Edge> edgeViews = new List<Edge>();
@@ -33,7 +33,10 @@ namespace Flow
                         {
                             if (type.IsInterface || type.IsAbstract)
                                 continue;
-
+                            if (Graph.Owner.CheckIsValidNodeType(type))
+                            {
+                                nodeTypes.Add(type);
+                            }
                         }
                     }
                 }
@@ -43,6 +46,8 @@ namespace Flow
 
         public FlowNode CreateNode(System.Type type, Vector2 position)
         {
+            GraphEditorUtil.RegisterUndo(Graph.Owner, "create node");
+
             IFlowNodeData nodeData = System.Activator.CreateInstance(type) as IFlowNodeData;
             FlowNode node = GraphCreateUtil.CreateNode(Graph, nodeData, new Rect(position, new Vector2(100, 100)));
             if (node != null)
@@ -63,6 +68,21 @@ namespace Flow
 
         public void RefreshView()
         {
+            if (View == null)
+            {
+                if (!nodeCreateWindow)
+                {
+                    nodeCreateWindow = FlowNodeTypeSelectWindow.Create<FlowNodeCreateWindow>(this, window);
+                }
+                View = new FlowGraphView
+                {
+                    viewTransformChanged = ViewTransformChangedCallback,
+                    graphViewChanged = GraphViewChangedCallback,
+                    nodeCreationRequest = (c)=>SearchWindow.Open(new SearchWindowContext(c.screenMousePosition), nodeCreateWindow),
+                };
+                window.rootVisualElement.Add(View);
+                View.StretchToParentSize();
+            }
             //删除
             for (int i=nodeViews.Count-1; i>=0; --i)
             {
@@ -159,12 +179,6 @@ namespace Flow
         private void OnEnable()
         {
             hideFlags = HideFlags.HideAndDontSave;
-
-            View = new FlowGraphView
-            {
-                viewTransformChanged = ViewTransformChangedCallback,
-                graphViewChanged = GraphViewChangedCallback
-            };
         }
 
         private GraphViewChange GraphViewChangedCallback(GraphViewChange changes)
@@ -239,7 +253,11 @@ namespace Flow
 
         private void OnDestroy()
         {
-            
+            if (nodeCreateWindow != null)
+            {
+                DestroyImmediate(nodeCreateWindow);
+                nodeCreateWindow = null;
+            }
         }
     }
 }
