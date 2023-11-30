@@ -15,8 +15,13 @@ namespace Flow
         private FlowNodeCreateWindow nodeCreateWindow;
         public List<FlowNodeRef> SelectNodes = new List<FlowNodeRef>();
 
-        private readonly List<FlowNodeView> nodeViews = new List<FlowNodeView>();
+        private readonly List<IFlowNodeView> nodeViews = new List<IFlowNodeView>();
         private readonly List<Edge> edgeViews = new List<Edge>();
+
+        protected IFlowNodeView FindView(string guid)
+        {
+            return nodeViews.Find(it => it.GUID == guid);
+        }
 
         private List<System.Type> nodeTypes;
 
@@ -57,11 +62,20 @@ namespace Flow
                     node.Name = fnn.Name;
                 else
                     node.Name = type.Name;
-
-                var nodeView = new FlowNodeView();
-                View.AddElement(nodeView);
-                nodeView.BindNode(this, node);
-                nodeViews.Add(nodeView);
+                if (nodeData is IFlowStackNode)
+                {
+                    var nodeView = new FlowStackNodeView();
+                    View.AddElement(nodeView);
+                    nodeView.BindNode(this, node);
+                    nodeViews.Add(nodeView);
+                }
+                else
+                {
+                    var nodeView = new FlowNodeView();
+                    View.AddElement(nodeView);
+                    nodeView.BindNode(this, node);
+                    nodeViews.Add(nodeView);
+                }
             }
             return node;
         }
@@ -87,32 +101,59 @@ namespace Flow
             for (int i=nodeViews.Count-1; i>=0; --i)
             {
                 var nodeView = nodeViews[i];
-                if (!Graph.Nodes.Exists(it=>it.GUID == nodeView.viewDataKey))
+                if (!Graph.Nodes.Exists(it=>it.GUID == nodeView.GUID))
                 {
-                    View.RemoveElement(nodeView);
+                    View.RemoveElement(nodeView as Node);
                     nodeViews.RemoveAt(i);
                 }
                 else
                 {
-                    nodeView.selected = SelectNodes.Exists(IT => IT.GUID == nodeView.viewDataKey);
+                    (nodeView as Node).selected = SelectNodes.Exists(it => it.GUID == nodeView.GUID);
                 }
             }
+            //TODO:处理 stackview
+            //for (int i = stackViews.Count - 1; i >= 0; --i)
+            //{
+            //    var nodeView = stackViews[i];
+            //    if (!Graph.Nodes.Exists(it => it.GUID == nodeView.viewDataKey))
+            //    {
+            //        View.RemoveElement(nodeView);
+            //        stackViews.RemoveAt(i);
+            //    }
+            //    else
+            //    {
+            //        nodeView.selected = SelectNodes.Exists(it => it.GUID == nodeView.viewDataKey);
+            //    }
+            //}
             //创建
             foreach (var nodeRef in Graph.Nodes)
             {
-                var nodeView = nodeViews.Find(it=>it.viewDataKey == nodeRef.GUID);
+                var nodeView = nodeViews.Find(it => it.GUID == nodeRef.GUID);
                 if (nodeView == null)
                 {
-                    nodeView = new FlowNodeView();
-                    View.AddElement(nodeView);
-                    nodeView.BindNode(this, nodeRef.Node);
-                    nodeViews.Add(nodeView);
+                    if (nodeRef.Node.Data is IFlowStackNode)
+                    {
+                        var stack = new FlowStackNodeView();
+                        nodeView = stack;
+                        View.AddElement(stack);
+                        stack.BindNode(this, nodeRef.Node);
+                        nodeViews.Add(stack);
+                    }
+                    else
+                    {
+                        var node = new FlowNodeView();
+                        nodeView = node;
+                        View.AddElement(node);
+                        node.BindNode(this, nodeRef.Node);
+                        nodeViews.Add(node);
+
+                    }
                 }
                 else
                 {
                     nodeView.RefreshNodeView(nodeRef.Node);
                 }
-                nodeView.selected = SelectNodes.Exists(IT => IT.GUID == nodeView.viewDataKey);
+                (nodeView as Node).selected = SelectNodes.Exists(it => it.GUID == nodeView.GUID);
             }
             //删除不存在或者不匹配的
             for (int i = edgeViews.Count - 1; i >= 0; --i)
@@ -151,8 +192,8 @@ namespace Flow
                 var edgeView = edgeViews.Find(it => it.viewDataKey == edgeData.GUID);
                 if (edgeView == null)
                 {
-                    var fromNode = nodeViews.Find(it => it.viewDataKey == edgeData.FromeNode);
-                    var toNode = nodeViews.Find(it => it.viewDataKey == edgeData.ToNode);
+                    var fromNode = FindView(edgeData.FromeNode);
+                    var toNode = FindView(edgeData.ToNode);
                     if (fromNode == null || toNode == null)
                         continue;
                     var fromPort = fromNode.OutputPorts[edgeData.OutPort];
@@ -208,9 +249,9 @@ namespace Flow
                                 edgeViews.RemoveAll(it=>it.viewDataKey == edge.viewDataKey);
                                 GraphDeleteUtil.RemoveEdge(Graph, edge.viewDataKey);
                                 break;
-                            case FlowNodeView nodeView:
-                                nodeViews.RemoveAll(it => it.viewDataKey == nodeView.viewDataKey);
-                                GraphDeleteUtil.RemoveNode(Graph, nodeView.viewDataKey);
+                            case IFlowNodeView nodeView:
+                                nodeViews.RemoveAll(it => it.GUID == nodeView.GUID);
+                                GraphDeleteUtil.RemoveNode(Graph, nodeView.GUID);
                                 break;
                         }
                     }

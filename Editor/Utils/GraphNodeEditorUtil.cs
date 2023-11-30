@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 namespace Flow
 {
@@ -41,14 +43,36 @@ namespace Flow
             }
         }
 
-        public static void DeleteNode(FlowGraphEditor graphEditor, string nodeGUID)
+        public static void OnInsterNodeToStack(FlowGraphEditor graphEditor, string stackGUID, string nodeGUID, int index)
         {
+            if (!graphEditor.Graph.Nodes.Exists(it => it.GUID == stackGUID))
+                return;
+            if (!graphEditor.Graph.Nodes.Exists(it => it.GUID == nodeGUID))
+                return;
 
+            GraphEditorUtil.RegisterUndo(graphEditor.Graph.Owner, "move in");
+            var stack = graphEditor.Graph.Stacks.Find(it => it.GUID == stackGUID);
+            if (stack == null)
+            {
+                stack = new FlowStackData { GUID = stackGUID };
+                graphEditor.Graph.Stacks.Add(stack);
+            }
+            index = Mathf.Clamp(index, 0, stack.Nodes.Count - 1);
+            stack.Nodes.Remove(nodeGUID);
+            stack.Nodes.Insert(index, nodeGUID);
         }
 
-        public static void CreateNode(FlowGraphEditor graphEditor, System.Type nodeType, Rect position)
+        public static void OnRemoveNodesFromStack(FlowGraphEditor graphEditor, string stackGUID, IEnumerable<string> nodes)
         {
-
+            if (nodes.Count() > 0)
+            {
+                var stack = graphEditor.Graph.Stacks.Find(it=>it.GUID == stackGUID);
+                GraphEditorUtil.RegisterUndo(graphEditor.Graph.Owner, "move out");
+                foreach (var guid in nodes)
+                {
+                    stack.Nodes.Remove(guid);
+                }
+            }
         }
     }
 }

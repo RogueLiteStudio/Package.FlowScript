@@ -20,6 +20,7 @@ namespace Flow
         public List<FlowNodeViewData> NodeViews = new List<FlowNodeViewData>();
         public List<FlowEdgeData> Edges = new List<FlowEdgeData>();
         public List<FlowNodeGroup> Groups = new List<FlowNodeGroup>();
+        public List<FlowStackData> Stacks = new List<FlowStackData>();//延迟创建，只有放入节点时才创建对应的Data
         public bool HasNode(FlowNode node)
         {
             return Nodes.Exists(it => it.GUID == node.GUID);

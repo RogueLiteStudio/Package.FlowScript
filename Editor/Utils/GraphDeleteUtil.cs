@@ -11,6 +11,21 @@
             subGraph.Nodes.RemoveAt(index);
             subGraph.NodeViews.RemoveAll(it => it.NodeGUID == guid);
             subGraph.Edges.RemoveAll(it => it.FromeNode == guid || it.ToNode == guid);
+            for (int i=subGraph.Stacks.Count-1; i>=0; --i)
+            {
+                var stack = subGraph.Stacks[i];
+                if (stack.GUID == guid)
+                {
+                    subGraph.Stacks.RemoveAt(i);
+                    break;
+                }
+                int idx = stack.Nodes.IndexOf(guid);
+                if (idx >= 0)
+                {
+                    stack.Nodes.RemoveAt(i);
+                    break;
+                }
+            }
             foreach (var group in subGraph.Groups)
             {
                 int idx = group.Nodes.IndexOf(guid);
