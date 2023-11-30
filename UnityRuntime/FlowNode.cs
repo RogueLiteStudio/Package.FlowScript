@@ -13,20 +13,35 @@ namespace Flow
         private SerializationData jsonData;
         [System.NonSerialized]
         private IFlowNodeData data;
-        public IFlowNodeData Data => data;
+        public IFlowNodeData Data
+        {
+            get
+            {
+                if (data == null)
+                {
+                    Deserialize();
+                }
+                return data;
+            }
+        }
         public void SetData(IFlowNodeData nodeData)
         {
             data = nodeData;
             OnBeforeSerialize();
         }
-        public void OnAfterDeserialize()
+        public void Deserialize()
         {
             data = TypeSerializerHelper.Deserialize(jsonData) as IFlowNodeData;
         }
 
+        public void OnAfterDeserialize()
+        {
+            data = null;
+        }
         public void OnBeforeSerialize()
         {
-            jsonData = TypeSerializerHelper.Serialize(data);
+            if(data != null)
+                jsonData = TypeSerializerHelper.Serialize(data);
         }
     }
 }
