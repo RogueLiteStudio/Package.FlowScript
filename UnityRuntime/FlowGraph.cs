@@ -10,8 +10,11 @@ namespace Flow
     }
     public class FlowGraph : ScriptableObject
     {
+        [HideInInspector]
         public List<FlowNode> Nodes = new List<FlowNode>();
+        [HideInInspector]
         public List<FlowSubGraph> SubGraphs = new List<FlowSubGraph>();
+        [HideInInspector]
         public List<SubGraphBind> GraphBinds = new List<SubGraphBind>();
 
         public FlowNode FindNode(string guid)

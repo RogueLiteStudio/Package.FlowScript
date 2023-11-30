@@ -10,7 +10,7 @@ namespace Flow
         public string Comment;
         [SerializeField]
         [HideInInspector]
-        private JsonElement jsonData;
+        private SerializationData jsonData;
         [System.NonSerialized]
         private IFlowNodeData data;
         public IFlowNodeData Data => data;
@@ -21,12 +21,12 @@ namespace Flow
         }
         public void OnAfterDeserialize()
         {
-            data = JsonSerializer.DeserializeNode(jsonData); ;
+            data = TypeSerializerHelper.Deserialize(jsonData) as IFlowNodeData;
         }
 
         public void OnBeforeSerialize()
         {
-            jsonData = JsonSerializer.SerializeNode(data);
+            jsonData = TypeSerializerHelper.Serialize(data);
         }
     }
 }

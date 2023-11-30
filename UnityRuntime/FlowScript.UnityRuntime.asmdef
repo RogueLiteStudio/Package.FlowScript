@@ -2,6 +2,8 @@
     "name": "FlowScript.UnityRuntime",
     "rootNamespace": "",
     "references": [
+        "Serialization.Runtime",
+        "Serialization.UJson",
         "FlowScript.Runtime"
     ],
     "includePlatforms": [],

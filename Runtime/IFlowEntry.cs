@@ -1,6 +1,6 @@
 ﻿namespace Flow
 {
-    public interface IFlowEntry
+    public interface IFlowEntry : IFlowOutputable
     {
     }
 }

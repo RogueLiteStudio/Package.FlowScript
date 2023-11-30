@@ -3,6 +3,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor;
+using System.Reflection;
 
 namespace Flow
 {
@@ -46,6 +47,12 @@ namespace Flow
             FlowNode node = GraphCreateUtil.CreateNode(Graph, nodeData, new Rect(position, new Vector2(100, 100)));
             if (node != null)
             {
+                var fnn = type.GetCustomAttribute<FlowNodeNameAttribute>(false);
+                if (fnn != null && string.IsNullOrEmpty(fnn.Name))
+                    node.Name = fnn.Name;
+                else
+                    node.Name = type.Name;
+
                 var nodeView = new FlowNodeView();
                 View.AddElement(nodeView);
                 nodeView.BindNode(this, node);

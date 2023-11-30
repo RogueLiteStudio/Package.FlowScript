@@ -109,7 +109,7 @@ namespace Flow
 
         protected virtual bool CheckType(System.Type type)
         {
-            return editor.Graph.AllowStageNode || !typeof(IFlowStageNode).IsAssignableFrom(type);
+            return editor.Graph.AllowStageNode || !typeof(IFlowStage).IsAssignableFrom(type);
         }
 
         protected abstract void OnTypeSelect(System.Type type, Vector2 position);
