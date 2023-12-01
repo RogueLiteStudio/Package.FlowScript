@@ -12,18 +12,23 @@ namespace Flow
     {
         public FlowGraph Owner;
         public string GUID;
+        public string ParentGUID;
+        public string BindNodeGUID;
         public string Name;
         public bool AllowStageNode;
         public Vector3 Position;
         public Vector3 Scale;
-        public List<FlowNodeRef> Nodes = new List<FlowNodeRef>();
-        public List<FlowNodeViewData> NodeViews = new List<FlowNodeViewData>();
+        public List<FlowNode> Nodes = new List<FlowNode>();
         public List<FlowEdgeData> Edges = new List<FlowEdgeData>();
         public List<FlowNodeGroup> Groups = new List<FlowNodeGroup>();
         public List<FlowStackData> Stacks = new List<FlowStackData>();//延迟创建，只有放入节点时才创建对应的Data
-        public bool HasNode(FlowNode node)
+        public bool HasNode(string guid)
         {
-            return Nodes.Exists(it => it.GUID == node.GUID);
+            return Nodes.Exists(it => it.GUID == guid);
+        }
+        public FlowNode FindNode(string guid)
+        {
+            return Nodes.Find(it => it.GUID == guid);
         }
 
         public FlowEdgeData FindEdge(string guid)

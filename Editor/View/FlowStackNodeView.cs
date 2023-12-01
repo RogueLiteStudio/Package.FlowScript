@@ -25,9 +25,8 @@ namespace Flow
         public void RefreshNodeView(FlowNode node)
         {
             titleLabel.text = node.Name;
-            var viewData = GraphEditor.Graph.NodeViews.Find(it => it.NodeGUID == node.GUID);
-            base.SetPosition(viewData.Position);
-            expanded = viewData.Expanded;
+            base.SetPosition(node.Position);
+            expanded = node.Expanded;
         }
         public void BindNode(FlowGraphEditor graphEditor, FlowNode node)
         {
@@ -68,12 +67,12 @@ namespace Flow
         {
             if (!base.AcceptsElement(element, ref proposedIndex, maxIndex))
                 return false;
-            var stackNode = GraphEditor.Graph.Owner.FindNode(viewDataKey);
+            var stackNode = GraphEditor.Graph.FindNode(viewDataKey);
             if (stackNode != null && stackNode.Data is IFlowStackNode stack)
             {
                 if (element is FlowNodeView nodeView)
                 {
-                    var node = GraphEditor.Graph.Owner.FindNode(nodeView.viewDataKey);
+                    var node = GraphEditor.Graph.FindNode(nodeView.viewDataKey);
                     if (node != null && node.Data is IFlowStackElement stackElement)
                     {
                         if (stack.Acceptable(stackElement))

@@ -8,21 +8,21 @@ namespace Flow
     {
         public static void OnNodePosition(FlowGraphEditor graphEditor, string nodeGUID, Rect position)
         {
-            var nodeView = graphEditor.Graph.NodeViews.Find(it => it.NodeGUID == nodeGUID);
-            if (nodeView != null)
+            var node = graphEditor.Graph.FindNode(nodeGUID);
+            if (node != null)
             {
-                GraphEditorUtil.RegisterUndo(graphEditor.Graph.Owner, "move node");
-                nodeView.Position = position;
+                //GraphEditorUtil.RegisterUndo(graphEditor.Graph.Owner, "move node");
+                node.Position = position;
             }
         }
 
         public static void OnNodeExpanded(FlowGraphEditor graphEditor, string nodeGUID, bool expanded)
         {
-            var nodeView = graphEditor.Graph.NodeViews.Find(it => it.NodeGUID == nodeGUID);
-            if (nodeView != null)
+            var node = graphEditor.Graph.FindNode(nodeGUID);
+            if (node != null)
             {
-                GraphEditorUtil.RegisterUndo(graphEditor.Graph.Owner, "node expanded");
-                nodeView.Expanded = expanded;
+                //GraphEditorUtil.RegisterUndo(graphEditor.Graph.Owner, "node expanded");
+                node.Expanded = expanded;
             }
         }
 
@@ -31,14 +31,13 @@ namespace Flow
             var index = graphEditor.Graph.Nodes.FindIndex(it => it.GUID == nodeGUID);
             if (index >= 0)
             {
-                var nodeRef = graphEditor.Graph.Nodes[index];
                 if (selected)
                 {
-                    graphEditor.SelectNodes.Add(nodeRef);
+                    graphEditor.SelectNodes.Add(nodeGUID);
                 }
                 else
                 {
-                    graphEditor.SelectNodes.Remove(nodeRef);
+                    graphEditor.SelectNodes.Remove(nodeGUID);
                 }
             }
         }

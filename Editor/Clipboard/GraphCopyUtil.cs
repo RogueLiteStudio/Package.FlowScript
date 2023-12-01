@@ -1,12 +1,14 @@
-﻿using UnityEditor;
+﻿using System.Collections.Generic;
+using UnityEditor;
+using UnityEditor.Experimental.GraphView;
 
 namespace Flow
 {
     public static class GraphCopyUtil
     {
-        public static FlowGraphCopyData CopyToClpboard(FlowGraphEditor editor)
+        public static FlowGraphCopyData CopyToClpboard(FlowGraphEditor editor, IEnumerable<GraphElement> elements)
         {
-            var copyData = ToCopyData(editor);
+            var copyData = ToCopyData(editor, elements);
             if (copyData != null)
             {
                 FlowGraphClipboard.instance.SetCopy(copyData);
@@ -14,7 +16,7 @@ namespace Flow
             return copyData;
         }
 
-        public static void AddSunGraphToCopyData(FlowSubGraph subGraph, string nodeGUID, FlowGraphCopyData graphCopyData)
+        public static void AddSubGraphToCopyData(FlowSubGraph subGraph, string nodeGUID, FlowGraphCopyData graphCopyData)
         {
             if (subGraph.Nodes.Count == 0)
                 return;
@@ -40,15 +42,10 @@ namespace Flow
             }
         }
 
-        public static FlowGraphCopyData ToCopyData(FlowGraphEditor editor)
+        public static FlowGraphCopyData ToCopyData(FlowGraphEditor editor, IEnumerable<GraphElement> elements)
         {
-            var elements = editor.View.CollectSelectedCopyableGraphElements();
-            if (elements.Count == 0)
-                return null;
             FlowGraphCopyData copyData = new FlowGraphCopyData { GraphScript = MonoScript.FromScriptableObject(editor.Graph.Owner) };
-
             FlowCopySubGraph graphData = new FlowCopySubGraph();//复制的最上层subgraph只记录节点信息
-
             foreach (var e in elements)
             {
                 switch (e)
@@ -71,7 +68,7 @@ namespace Flow
 
         private static void AddNodeToCopyData(FlowSubGraph subGraph, FlowGraphCopyData graphCopyData, FlowCopySubGraph copyData, string guid)
         {
-            var node = subGraph.Owner.FindNode(guid);
+            var node = subGraph.FindNode(guid);
             if (node == null)
                 return;
             var copyNode = new FlowCopyNode 
@@ -79,25 +76,17 @@ namespace Flow
                 GUID = node.GUID, 
                 Name = node.Name, 
                 Comment = node.Comment,
+                Expanded = node.Expanded,
+                Position = node.Position,
                 IsStageNode = node.Data is IFlowStackNode,
                 DataJson = TypeSerializerHelper.Serialize(node.Data),
             };
-            var viewData = subGraph.NodeViews.Find(it => it.NodeGUID == guid);
-            if (viewData != null)
-            {
-                copyNode.Expanded = viewData.Expanded;
-                copyNode.Position = viewData.Position;
-            }
             copyData.Nodes.Add(copyNode);
-
-            //将绑定的子图也加入复制数据
-            var bind = subGraph.Owner.GraphBinds.Find(it => it.NodeGUID == guid);
-            if (bind != null)
+            foreach (var sub in subGraph.Owner.SubGraphs)
             {
-                var bindSubGraph = subGraph.Owner.FindSubGraph(bind.GraphGUID);
-                if (bindSubGraph != null)
+                if (sub.BindNodeGUID == guid)
                 {
-                    AddSunGraphToCopyData(subGraph, guid, graphCopyData);
+                    AddSubGraphToCopyData(subGraph, guid, graphCopyData);
                 }
             }
         }

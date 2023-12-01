@@ -20,9 +20,8 @@ namespace Flow
         public void RefreshNodeView(FlowNode node)
         {
             title = node.Name;
-            var viewData = GraphEditor.Graph.NodeViews.Find(it => it.NodeGUID == node.GUID);
-            base.SetPosition(viewData.Position);
-            expanded = viewData.Expanded;
+            base.SetPosition(node.Position);
+            expanded = node.Expanded;
         }
 
         public void BindNode(FlowGraphEditor graphEditor, FlowNode node)

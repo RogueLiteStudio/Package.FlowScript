@@ -8,6 +8,10 @@ namespace Flow
         public string GUID;
         public string Name;
         public string Comment;
+        [HideInInspector]
+        public Rect Position;
+        [HideInInspector]
+        public bool Expanded = true;
         [SerializeField]
         [HideInInspector]
         private SerializationData jsonData;

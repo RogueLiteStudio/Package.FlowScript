@@ -1,4 +1,6 @@
-﻿namespace Flow
+﻿using System.Linq;
+
+namespace Flow
 {
     public class GraphDeleteUtil : GraphCreateUtil
     {
@@ -9,7 +11,6 @@
             if (index < 0)
                 return;
             subGraph.Nodes.RemoveAt(index);
-            subGraph.NodeViews.RemoveAll(it => it.NodeGUID == guid);
             subGraph.Edges.RemoveAll(it => it.FromeNode == guid || it.ToNode == guid);
             for (int i=subGraph.Stacks.Count-1; i>=0; --i)
             {
@@ -36,12 +37,14 @@
                 }
             }
 
-            var bind = subGraph.Owner.GraphBinds.Find(it => it.NodeGUID == guid);
-            if (bind != null)
+            foreach (var sub in subGraph.Owner.SubGraphs)
             {
-                RemoveSubGraph(subGraph.Owner, bind.GraphGUID);
+                if (sub.BindNodeGUID == guid)
+                {
+                    RemoveSubGraph(subGraph.Owner, sub.GUID);
+                    break;
+                }
             }
-
         }
 
         public static void RemoveSubGraph(FlowGraph graph, string subGraphID)
@@ -51,20 +54,10 @@
                 return;
             var subGraph = graph.SubGraphs[index];
             graph.SubGraphs.RemoveAt(index);
-
-            int bindIndex = graph.GraphBinds.FindIndex(it => it.GraphGUID == subGraphID);
-            if (bindIndex >= 0)
+            var subs = graph.SubGraphs.Where(it => it.ParentGUID == subGraphID).Select(it => it.GUID).ToArray();
+            foreach (var id in subs)
             {
-                graph.GraphBinds.RemoveAt(bindIndex);
-            }
-            if (subGraph.Nodes.Count > 0)
-            {
-                //此处防止循环调用
-                var nodes = subGraph.Nodes.ToArray();
-                foreach (var node in nodes)
-                {
-                    RemoveNode(subGraph, node.GUID);
-                }
+                RemoveSubGraph(graph, id);
             }
         }
 
