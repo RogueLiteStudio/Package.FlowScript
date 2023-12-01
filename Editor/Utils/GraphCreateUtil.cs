@@ -19,7 +19,7 @@ namespace Flow
             return subGraph;
         }
 
-        public static FlowNode CreateNode(FlowSubGraph subGraph, IFlowNodeData data, Rect position)
+        public static FlowNode CreateNode(FlowSubGraph subGraph, IFlowNodeData data, Rect position, bool expanded = true)
         {
             FlowNode node = new FlowNode
             { 
@@ -36,7 +36,7 @@ namespace Flow
             subGraph.Owner.Nodes.Add(node);
 
             subGraph.Nodes.Add(FlowNodeRef.CreateNodeRef(subGraph.Owner, node.GUID));
-            subGraph.NodeViews.Add(new FlowNodeViewData { NodeGUID = node.GUID, Position = position });
+            subGraph.NodeViews.Add(new FlowNodeViewData { NodeGUID = node.GUID, Position = position, Expanded = expanded });
             return node;
         }
 

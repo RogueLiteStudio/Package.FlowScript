@@ -50,15 +50,22 @@ namespace Flow
             if (!graphEditor.Graph.Nodes.Exists(it => it.GUID == nodeGUID))
                 return;
 
-            GraphEditorUtil.RegisterUndo(graphEditor.Graph.Owner, "move in");
             var stack = graphEditor.Graph.Stacks.Find(it => it.GUID == stackGUID);
+            int preIndex = -1;
+            if (stack != null)
+            {
+                preIndex = stack.Nodes.FindIndex(it => it == nodeGUID);
+                if (preIndex == index)
+                    return;
+            }
+            GraphEditorUtil.RegisterUndo(graphEditor.Graph.Owner, "move in");
             if (stack == null)
             {
                 stack = new FlowStackData { GUID = stackGUID };
                 graphEditor.Graph.Stacks.Add(stack);
             }
-            index = Mathf.Clamp(index, 0, stack.Nodes.Count - 1);
-            stack.Nodes.Remove(nodeGUID);
+            if (preIndex >= 0)
+                stack.Nodes.RemoveAt(preIndex);
             stack.Nodes.Insert(index, nodeGUID);
         }
 

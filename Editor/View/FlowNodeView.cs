@@ -27,6 +27,10 @@ namespace Flow
 
         public void BindNode(FlowGraphEditor graphEditor, FlowNode node)
         {
+            if (node.Data is IFlowEntry)
+            {
+                capabilities &= ~(Capabilities.Deletable & Capabilities.Copiable);
+            }
             GraphEditor = graphEditor;
             viewDataKey = node.GUID;
             RefreshNodeView(node);

@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace Flow
 {
+    //TODO:暂时不支持
     [System.Serializable]
     public class FlowNodeGroup
     {

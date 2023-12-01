@@ -3,7 +3,9 @@
     "rootNamespace": "",
     "references": [
         "FlowScript.Runtime",
-        "FlowScript.UnityRuntime"
+        "FlowScript.UnityRuntime",
+        "Serialization.Runtime",
+        "Serialization.UJson"
     ],
     "includePlatforms": [
         "Editor"

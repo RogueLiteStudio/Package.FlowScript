@@ -108,23 +108,14 @@ namespace Flow
                 }
                 else
                 {
+                    if (nodeView is FlowStackNodeView stackNodeView)
+                    {
+                        //这里先全部清掉，后面再添加
+                        stackNodeView.RemoveChildren();
+                    }
                     (nodeView as Node).selected = SelectNodes.Exists(it => it.GUID == nodeView.GUID);
                 }
             }
-            //TODO:处理 stackview
-            //for (int i = stackViews.Count - 1; i >= 0; --i)
-            //{
-            //    var nodeView = stackViews[i];
-            //    if (!Graph.Nodes.Exists(it => it.GUID == nodeView.viewDataKey))
-            //    {
-            //        View.RemoveElement(nodeView);
-            //        stackViews.RemoveAt(i);
-            //    }
-            //    else
-            //    {
-            //        nodeView.selected = SelectNodes.Exists(it => it.GUID == nodeView.viewDataKey);
-            //    }
-            //}
             //创建
             foreach (var nodeRef in Graph.Nodes)
             {
@@ -146,15 +137,47 @@ namespace Flow
                         View.AddElement(node);
                         node.BindNode(this, nodeRef.Node);
                         nodeViews.Add(node);
-
                     }
                 }
                 else
                 {
+                    //刷新下添加
+                    View.AddElement(nodeView as Node);
                     nodeView.RefreshNodeView(nodeRef.Node);
                 }
                 (nodeView as Node).selected = SelectNodes.Exists(it => it.GUID == nodeView.GUID);
             }
+            //重新Stack的添加子节点
+            foreach (var stack in Graph.Stacks)
+            {
+                var stackNodeView = nodeViews.Find(it => it.GUID == stack.GUID) as FlowStackNodeView;
+                if (stackNodeView != null)
+                {
+                    foreach (var nodeGUID in stack.Nodes)
+                    {
+                        var nodeView = nodeViews.Find(it => it.GUID == nodeGUID);
+                        if (nodeView != null)
+                        {
+                            stackNodeView.AddChild(nodeView as FlowNodeView);
+                        }
+                    }
+                }
+            }
+            RefreshEdge();
+        }
+
+        public virtual void OnInspector()
+        {
+
+        }
+
+        private void OnEnable()
+        {
+            hideFlags = HideFlags.HideAndDontSave;
+        }
+
+        private void RefreshEdge()
+        {
             //删除不存在或者不匹配的
             for (int i = edgeViews.Count - 1; i >= 0; --i)
             {
@@ -173,7 +196,7 @@ namespace Flow
                     edgeViews.RemoveAt(i);
                     continue;
                 }
-                if (fromNode.NodeGUID != edgeData.FromeNode || fromNode.Index != edgeData.InPort )
+                if (fromNode.NodeGUID != edgeData.FromeNode || fromNode.Index != edgeData.InPort)
                 {
                     View.RemoveElement(edgeView);
                     edgeViews.RemoveAt(i);
@@ -196,6 +219,12 @@ namespace Flow
                     var toNode = FindView(edgeData.ToNode);
                     if (fromNode == null || toNode == null)
                         continue;
+                    //代码重构可能移除Port
+                    if (fromNode.OutputPorts == null || fromNode.OutputPorts.Length <= edgeData.OutPort)
+                        continue;
+                    if (toNode.InputPorts == null || toNode.InputPorts.Length <= edgeData.InPort)
+                        continue;
+
                     var fromPort = fromNode.OutputPorts[edgeData.OutPort];
                     var toPort = toNode.InputPorts[edgeData.InPort];
                     if (fromPort == null || toPort == null)
@@ -210,16 +239,6 @@ namespace Flow
                     edgeViews.Add(edgeView);
                 }
             }
-        }
-
-        public virtual void OnInspector()
-        {
-
-        }
-
-        private void OnEnable()
-        {
-            hideFlags = HideFlags.HideAndDontSave;
         }
 
         private GraphViewChange GraphViewChangedCallback(GraphViewChange changes)
@@ -252,6 +271,7 @@ namespace Flow
                             case IFlowNodeView nodeView:
                                 nodeViews.RemoveAll(it => it.GUID == nodeView.GUID);
                                 GraphDeleteUtil.RemoveNode(Graph, nodeView.GUID);
+                                RefreshEdge();
                                 break;
                         }
                     }
@@ -262,12 +282,12 @@ namespace Flow
                 GraphEditorUtil.RegisterUndo(Graph.Owner, "create edge");
                 foreach (var edge in changes.edgesToCreate)
                 {
-                    var fromNodeView = edge.output.node as FlowNodeView;
-                    var toNodeView = edge.input.node as FlowNodeView;
+                    var fromNodeView = edge.output.node as IFlowNodeView;
+                    var toNodeView = edge.input.node as IFlowNodeView;
                     var fromPort = edge.output as FlowPortView;
                     var toPort = edge.input as FlowPortView;
 
-                    var edgeData = GraphCreateUtil.CreateEdge(Graph, fromNodeView.viewDataKey, fromPort.Index, toNodeView.viewDataKey, toPort.Index);
+                    var edgeData = GraphCreateUtil.CreateEdge(Graph, fromNodeView.GUID, fromPort.Index, toNodeView.GUID, toPort.Index);
                     edge.viewDataKey = edgeData.GUID;
                     edgeViews.Add(edge);
                 }
@@ -288,7 +308,7 @@ namespace Flow
                 position += new Vector2(-10f, -28);
                 Vector2 mousePos = View.ChangeCoordinatesTo(View.contentViewContainer, position);
 
-                //添加Prvite
+                //添加锚点节点
             }
         }
 

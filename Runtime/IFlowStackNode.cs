@@ -6,6 +6,6 @@
 
     public interface IFlowStackNode : IFlowNodeData
     {
-        bool Acceptable(IFlowStackElement element);
+        bool Acceptable(IFlowStackElement element) { return true; }
     }
 }
