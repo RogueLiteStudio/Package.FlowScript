@@ -38,7 +38,6 @@ namespace Flow
         [SerializeField]
         private EditorWindow window;
         private Texture2D icon;
-        private List<SearchTreeEntry> tree;
 
         public static T Create<T>(FlowGraphEditor editor, EditorWindow window) where T : FlowNodeTypeSelectWindow
         {
@@ -65,9 +64,7 @@ namespace Flow
 
         public List<SearchTreeEntry> CreateSearchTree(SearchWindowContext context)
         {
-            if (tree != null)
-                return tree;
-            tree = new List<SearchTreeEntry>();
+            var tree = new List<SearchTreeEntry>();
             NodeTypeTree rootTree = new NodeTypeTree() { Name = "选择节点类型" };
             List<string> tmpList = new List<string>();
             foreach (var type in editor.NodeTypes)

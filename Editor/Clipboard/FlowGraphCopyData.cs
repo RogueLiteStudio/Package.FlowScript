@@ -50,6 +50,7 @@ namespace Flow
     [Serializable]
     public class FlowGraphCopyData
     {
+        public string Key;
         public MonoScript GraphScript;
         public List<FlowCopySubGraph> Graphs = new List<FlowCopySubGraph>();
     }

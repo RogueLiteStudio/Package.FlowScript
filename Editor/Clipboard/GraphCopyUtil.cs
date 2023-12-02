@@ -1,51 +1,28 @@
 ﻿using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+using UnityEngine;
 
 namespace Flow
 {
     public static class GraphCopyUtil
     {
-        public static FlowGraphCopyData CopyToClpboard(FlowGraphEditor editor, IEnumerable<GraphElement> elements)
+        public static FlowGraphCopyData CopyToClpboard(FlowGraphEditor editor, string key, IEnumerable<GraphElement> elements)
         {
             var copyData = ToCopyData(editor, elements);
             if (copyData != null)
             {
+                copyData.Key = key;
                 FlowGraphClipboard.instance.SetCopy(copyData);
             }
             return copyData;
-        }
-
-        public static void AddSubGraphToCopyData(FlowSubGraph subGraph, string nodeGUID, FlowGraphCopyData graphCopyData)
-        {
-            if (subGraph.Nodes.Count == 0)
-                return;
-            FlowCopySubGraph copyData = new FlowCopySubGraph 
-            {
-                GUID = subGraph.GUID, 
-                BindNode = nodeGUID,
-                Name = subGraph.Name, 
-                AllowStageNode = subGraph.AllowStageNode,
-            };
-            graphCopyData.Graphs.Add(copyData);
-            foreach (var nodeRef in subGraph.Nodes)
-            {
-                AddNodeToCopyData(subGraph, graphCopyData, copyData, nodeRef.GUID);
-            }
-            foreach (var edge in subGraph.Edges)
-            {
-                AddEdgeToCopyData(subGraph, copyData, edge.GUID);
-            }
-            foreach (var stack in subGraph.Stacks)
-            {
-                AddStackToCopyData(subGraph, copyData, stack.GUID);
-            }
         }
 
         public static FlowGraphCopyData ToCopyData(FlowGraphEditor editor, IEnumerable<GraphElement> elements)
         {
             FlowGraphCopyData copyData = new FlowGraphCopyData { GraphScript = MonoScript.FromScriptableObject(editor.Graph.Owner) };
             FlowCopySubGraph graphData = new FlowCopySubGraph();//复制的最上层subgraph只记录节点信息
+            copyData.Graphs.Add(graphData);
             foreach (var e in elements)
             {
                 switch (e)
@@ -62,8 +39,34 @@ namespace Flow
                         break;
                 }
             }
-            ClearUnUsed(copyData);
+            ClearUnUsed(copyData, editor.View.GraphMousePosition);
             return copyData;
+        }
+
+        public static void AddSubGraphToCopyData(FlowSubGraph subGraph, string nodeGUID, FlowGraphCopyData graphCopyData)
+        {
+            if (subGraph.Nodes.Count == 0)
+                return;
+            FlowCopySubGraph copyData = new FlowCopySubGraph
+            {
+                GUID = subGraph.GUID,
+                BindNode = nodeGUID,
+                Name = subGraph.Name,
+                AllowStageNode = subGraph.AllowStageNode,
+            };
+            graphCopyData.Graphs.Add(copyData);
+            foreach (var nodeRef in subGraph.Nodes)
+            {
+                AddNodeToCopyData(subGraph, graphCopyData, copyData, nodeRef.GUID);
+            }
+            foreach (var edge in subGraph.Edges)
+            {
+                AddEdgeToCopyData(subGraph, copyData, edge.GUID);
+            }
+            foreach (var stack in subGraph.Stacks)
+            {
+                AddStackToCopyData(subGraph, copyData, stack.GUID);
+            }
         }
 
         private static void AddNodeToCopyData(FlowSubGraph subGraph, FlowGraphCopyData graphCopyData, FlowCopySubGraph copyData, string guid)
@@ -117,9 +120,13 @@ namespace Flow
         }
         
 
-        private static void ClearUnUsed(FlowGraphCopyData copyData)
+        private static void ClearUnUsed(FlowGraphCopyData copyData, Vector2 mousePosition)
         {
             var subGraph = copyData.Graphs[0];
+            foreach (var node in subGraph.Nodes)
+            {
+                node.Position.position -= mousePosition;
+            }
             for (int i= subGraph.Edges.Count-1; i>-0; --i)
             {
                 var edge = subGraph.Edges[i];

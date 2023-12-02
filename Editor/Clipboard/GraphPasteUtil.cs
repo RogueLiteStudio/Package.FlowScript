@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Flow
 {
@@ -9,7 +10,7 @@ namespace Flow
         private static Dictionary<string, string> sNodeOwners = new Dictionary<string, string>();
         public static bool CheckPaste(FlowGraphEditor editor)
         {
-            var copyData = FlowGraphClipboard.instance.GetCopyData(editor.Graph.Owner);
+            var copyData = FlowGraphClipboard.instance.GetCopyData(editor.Graph.Owner, string.Empty);
             if (copyData == null)
                 return false;
             return CheckPaste(editor, copyData);
@@ -19,19 +20,34 @@ namespace Flow
         {
             if (copyData.Graphs.Count == 0 || copyData.Graphs[0].Nodes.Count == 0)
                 return false;
-            if (copyData.GraphScript.GetType() != editor.Graph.Owner.GetType())
+            if (copyData.GraphScript.GetClass() != editor.Graph.Owner.GetType())
                 return false;
             if (!editor.Graph.AllowStageNode && copyData.Graphs[0].Nodes.Exists(it=>it.IsStageNode))
                 return false;
             return true;
         }
 
-        public static FlowGraphCopyData GetCopyData(FlowGraph graph)
+        public static FlowGraphCopyData GetCopyData(FlowGraph graph, string key)
         {
-            return FlowGraphClipboard.instance.GetCopyData(graph);
+            return FlowGraphClipboard.instance.GetCopyData(graph, key);
         }
 
-        public static void Paste(FlowGraphEditor editor, FlowGraphCopyData copyData, string opName)
+        public static void Paste(FlowGraphEditor editor, string key, string operationName)
+        {
+            var copyData = GetCopyData(editor.Graph.Owner, key);
+            if (copyData == null)
+                return;
+            Vector2 offset = editor.View.GraphMousePosition;
+            //如果是Duplicate则每次粘贴都要移除
+            if (operationName == "Duplicate")
+            {
+                FlowGraphClipboard.instance.Remove(key);
+                offset += new Vector2(50, 50);
+            }
+            Paste(editor, copyData, operationName, offset);
+        }
+
+        public static void Paste(FlowGraphEditor editor, FlowGraphCopyData copyData, string opName, Vector2 offset)
         {
             sGUIDMap.Clear();
             sNodeOwners.Clear();
@@ -41,7 +57,11 @@ namespace Flow
             var mainGraphData = copyData.Graphs[0];
             foreach (var data in mainGraphData.Nodes)
             {
-                PasteNode(editor.Graph, data);
+                var node = PasteNode(editor.Graph, data);
+                if (node != null)
+                {
+                    node.Position.position += offset;
+                }
             }
             foreach (var data in mainGraphData.Stacks)
             {
@@ -71,6 +91,9 @@ namespace Flow
                 return subGraph.FindNode(newGUID);
             }
             var node = GraphCreateUtil.CreateNode(subGraph, data, copyData.Position, copyData.Expanded);
+            node.Name = copyData.Name;
+            node.Comment = copyData.Comment;
+
             sGUIDMap.Add(copyData.GUID, node.GUID);
             sNodeOwners.Add(node.GUID, subGraph.GUID);
             return node;

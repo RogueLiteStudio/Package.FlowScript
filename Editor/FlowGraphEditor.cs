@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEditor;
-using System.Reflection;
 
 namespace Flow
 {
@@ -57,11 +56,6 @@ namespace Flow
             FlowNode node = GraphCreateUtil.CreateNode(Graph, nodeData, new Rect(position, new Vector2(100, 100)));
             if (node != null)
             {
-                var fnn = type.GetCustomAttribute<FlowNodeNameAttribute>(false);
-                if (fnn != null && string.IsNullOrEmpty(fnn.Name))
-                    node.Name = fnn.Name;
-                else
-                    node.Name = type.Name;
                 if (nodeData is IFlowStackNode)
                 {
                     var nodeView = new FlowStackNodeView();
@@ -84,7 +78,8 @@ namespace Flow
         {
             if (View != null && View.SubGraphGUID != Graph.GUID)
             {
-                View.RemoveFromHierarchy();
+                //清理所有的子节点
+                View.Clear();
                 nodeViews.Clear();
                 edgeViews.Clear();
             }
@@ -107,6 +102,9 @@ namespace Flow
                 window.rootVisualElement.Add(View);
                 View.StretchToParentSize();
             }
+            //重置视图位置
+            View.contentViewContainer.transform.position = Graph.Position;
+            View.contentViewContainer.transform.scale = Graph.Scale;
             //删除
             for (int i=nodeViews.Count-1; i>=0; --i)
             {
@@ -324,18 +322,14 @@ namespace Flow
 
         protected virtual string SerializeGraphElements(IEnumerable<GraphElement> elements)
         {
-            //TODO:区分Copy和
-            GraphCopyUtil.CopyToClpboard(this, elements);
-            return string.Empty;
+            string key = System.DateTime.Now.ToString();
+            GraphCopyUtil.CopyToClpboard(this, key, elements);
+            return key;
         }
 
         protected virtual void UnserializeAndPaste(string operationName, string data)
         {
-            var copyData = GraphPasteUtil.GetCopyData(Graph.Owner);
-            if (copyData != null)
-            {
-                GraphPasteUtil.Paste(this, copyData, operationName);
-            }
+            GraphPasteUtil.Paste(this, data, operationName);
         }
 
         private void OnDestroy()

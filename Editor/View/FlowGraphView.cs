@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Experimental.GraphView;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Flow
@@ -9,6 +10,9 @@ namespace Flow
     {
         public FlowGraphEditor GraphEditor;
         public string SubGraphGUID;
+
+        public Vector2 MousePosition { get; private set; }
+        public Vector2 GraphMousePosition => contentViewContainer.WorldToLocal(MousePosition);
         protected override bool canPaste => GraphPasteUtil.CheckPaste(GraphEditor);
         public FlowGraphView()
         {
@@ -17,6 +21,9 @@ namespace Flow
             this.AddManipulator(new SelectionDragger());
             this.AddManipulator(new RectangleSelector());
             SetupZoom(0.1f, 5f);
+
+            //注册鼠标事件，获取最后鼠标的位置
+            RegisterCallback<MouseMoveEvent>(OnMouseMoveEvent);
         }
 
         // ！！！！狗日的没有默认行为，必须重写！！！！
@@ -34,6 +41,10 @@ namespace Flow
             var elements = selection.OfType<GraphElement>();
             CollectCopyableGraphElements(elements, copyables);
             return copyables;
+        }
+        private void OnMouseMoveEvent(IMouseEvent evt)
+        {
+            MousePosition = evt.mousePosition;
         }
     }
 }
