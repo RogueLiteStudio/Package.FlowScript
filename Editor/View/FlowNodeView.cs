@@ -15,13 +15,18 @@ namespace Flow
         public FlowNodeView()
         {
             styleSheets.Add(Resources.Load<StyleSheet>(baseNodeStyle));
+            style.minWidth = 100;
         }
 
         public void RefreshNodeView(FlowNode node)
         {
             title = node.Name;
             base.SetPosition(node.Position);
-            expanded = node.Expanded;
+            expanded = true;//node.Expanded;
+            if (m_CollapseButton != null)
+            {
+                m_CollapseButton.style.display = DisplayStyle.None;
+            }
         }
 
         public void BindNode(FlowGraphEditor graphEditor, FlowNode node)
@@ -40,8 +45,8 @@ namespace Flow
 
         protected override void ToggleCollapse()
         {
-            base.ToggleCollapse();
-            GraphNodeEditorUtil.OnNodeExpanded(GraphEditor, viewDataKey, expanded);
+            //base.ToggleCollapse();
+            //GraphNodeEditorUtil.OnNodeExpanded(GraphEditor, viewDataKey, expanded);
         }
 
         public override void SetPosition(Rect newPos)

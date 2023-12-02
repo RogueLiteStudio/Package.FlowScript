@@ -33,7 +33,8 @@ namespace Flow
             {
                 if (selected)
                 {
-                    graphEditor.SelectNodes.Add(nodeGUID);
+                    if (!graphEditor.SelectNodes.Contains(nodeGUID))
+                        graphEditor.SelectNodes.Add(nodeGUID);
                 }
                 else
                 {

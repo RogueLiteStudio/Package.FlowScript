@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -10,7 +9,7 @@ namespace Flow
     {
         public FlowSubGraph Graph;
         public FlowGraphView View;
-        public EditorWindow window;
+        public FlowGraphWindow window;
         private FlowNodeCreateWindow nodeCreateWindow;
         public List<string> SelectNodes = new List<string>();
 
@@ -99,8 +98,11 @@ namespace Flow
                     graphViewChanged = GraphViewChangedCallback,
                     nodeCreationRequest = (c)=>SearchWindow.Open(new SearchWindowContext(c.screenMousePosition), nodeCreateWindow),
                 };
-                window.rootVisualElement.Add(View);
+                window.GraphViewRoot.Add(View);
                 View.StretchToParentSize();
+                View.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
+                View.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
+                View.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
             }
             //重置视图位置
             View.contentViewContainer.transform.position = Graph.Position;
@@ -121,7 +123,6 @@ namespace Flow
                         //这里先全部清掉，后面再添加
                         stackNodeView.RemoveChildren();
                     }
-                    (nodeView as Node).selected = SelectNodes.Contains(nodeView.GUID);
                 }
             }
             //创建
@@ -153,7 +154,6 @@ namespace Flow
                     View.AddElement(nodeView as Node);
                     nodeView.RefreshNodeView(node);
                 }
-                (nodeView as Node).selected = SelectNodes.Contains(nodeView.GUID);
             }
             //重新Stack的添加子节点
             foreach (var stack in Graph.Stacks)
@@ -169,6 +169,15 @@ namespace Flow
                             stackNodeView.AddChild(nodeView as FlowNodeView);
                         }
                     }
+                }
+            }
+            View.ClearSelection();
+            foreach (var node in SelectNodes)
+            {
+                var nodeView = nodeViews.Find(it => it.GUID == node) as Node;
+                if (nodeView != null)
+                {
+                    View.AddToSelection(nodeView);
                 }
             }
             RefreshEdge();
@@ -317,6 +326,43 @@ namespace Flow
                 Vector2 mousePos = View.ChangeCoordinatesTo(View.contentViewContainer, position);
 
                 //添加锚点节点
+            }
+        }
+        protected virtual void OnValidateCommand(ValidateCommandEvent evt)
+        {
+            if (View.panel.GetCapturingElement(PointerId.mousePointerId) != null)
+                return;
+            if (evt.commandName == "SelectAll")
+            {
+                evt.StopPropagation();
+                evt.imguiEvent?.Use();
+            }
+        }
+
+        protected virtual void OnKeyDownEvent(KeyDownEvent evt)
+        {
+            if (evt.keyCode == KeyCode.S && evt.actionKey)
+            {
+                Graph.Owner.Save();
+                FlowGraphProcess.OnGraphSave(Graph.Owner);
+            }
+        }
+
+        protected virtual void OnExecuteCommand(ExecuteCommandEvent evt)
+        {
+            //具体事件参考
+            //https://docs.unity3d.com/Manual/UIE-Command-Events.html
+            if (View.panel.GetCapturingElement(PointerId.mousePointerId) == null)
+            {
+                if (evt.commandName == "SelectAll")
+                {
+                    SelectNodes.Clear();
+                    View.ClearSelection();
+                    foreach (var nodeView in nodeViews)
+                    {
+                        View.AddToSelection((nodeView as Node));
+                    }
+                }
             }
         }
 

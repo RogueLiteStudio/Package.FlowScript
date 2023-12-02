@@ -17,6 +17,9 @@ namespace Flow
                 AllowStageNode = allowStageNode,
                 GUID = System.Guid.NewGuid().ToString(),
             };
+            var parent = graph.FindSubGraph(parenGUID);
+            var bindNode = parent?.FindNode(nodeGUID);
+            FlowGraphProcess.OnGraphCreateSubGraph(graph, subGraph, parent, bindNode);
             graph.SubGraphs.Add(subGraph);
             return subGraph;
         }
