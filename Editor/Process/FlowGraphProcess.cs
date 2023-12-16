@@ -23,9 +23,16 @@ namespace Flow
                             if (typeof(IFlowGraphProcess).IsAssignableFrom(type))
                             {
                                 var attribute = type.GetCustomAttribute<CustomFlowGraphProcessAttribute>(false);
-                                if (process.ContainsKey(attribute.GraphType))
+                                if (attribute != null)
                                 {
-                                    process.Remove(attribute.GraphType);
+                                    if (!attribute.GraphType.IsSubclassOf(typeof(FlowGraph)))
+                                    {
+                                        UnityEngine.Debug.LogError($"{type.Name} 的 CustomFlowGraphProcessAttribute 类型错误，不是 FlowGraph 的子类");
+                                    }
+                                    else if (process.ContainsKey(attribute.GraphType))
+                                    {
+                                        process.Remove(attribute.GraphType);
+                                    }
                                 }
                                 process.Add(attribute.GraphType, Activator.CreateInstance(type) as IFlowGraphProcess);
                             }

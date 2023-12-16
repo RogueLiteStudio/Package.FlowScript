@@ -26,6 +26,7 @@ namespace Flow
         }
 
         public VisualElement GraphViewRoot { get; protected set; }
+        public VisualElement InspectorView { get; protected set; }
 
         public Toolbar TopToolbar { get; protected set; }
 
@@ -86,10 +87,10 @@ namespace Flow
             }
             if (GraphViewRoot == null)
             {
-                var split = new TwoPaneSplitView();
+                var split = new TwoPaneSplitView(1, 200, TwoPaneSplitViewOrientation.Horizontal);
                 rootVisualElement.Add(split);
                 split.Add(GraphViewRoot = new VisualElement());
-                GraphViewRoot.StretchToParentSize();
+                split.Add(InspectorView = new VisualElement());
             }
         }
     }

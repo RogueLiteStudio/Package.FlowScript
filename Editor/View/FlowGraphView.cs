@@ -20,6 +20,7 @@ namespace Flow
             this.AddManipulator(new ContentDragger());
             this.AddManipulator(new SelectionDragger());
             this.AddManipulator(new RectangleSelector());
+            Insert(0, new GridBackground());
             SetupZoom(0.1f, 5f);
 
             //注册鼠标事件，获取最后鼠标的位置
