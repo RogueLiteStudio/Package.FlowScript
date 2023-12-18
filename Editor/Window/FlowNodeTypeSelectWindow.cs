@@ -67,32 +67,36 @@ namespace Flow
             var tree = new List<SearchTreeEntry>();
             NodeTypeTree rootTree = new NodeTypeTree() { Name = "选择节点类型" };
             List<string> tmpList = new List<string>();
-            foreach (var type in editor.NodeTypes)
+            var types = FlowGraphProcess.GetNodeTypes(editor.Graph.Owner);
+            if (types != null)
             {
-                //隐藏节点不允许创建
-                if (type.GetCustomAttribute<FlowHiddenInNodeCreateAttribute>() != null)
-                    continue;
-                var dpName = type.GetCustomAttribute<FlowNodeNameAttribute>(false);
-                string name = dpName == null ? type.Name : string.Format("{0}({1})", dpName.Name, type.Name);
-                tmpList.Clear();
-                var catalogType = type;
-                while (catalogType != null)
+                foreach (var type in types)
                 {
-                    var catalog = catalogType.GetCustomAttribute<FlowNodeCatalogAttribute>(false);
-                    if (catalog != null && !string.IsNullOrEmpty(catalog.Name))
+                    //隐藏节点不允许创建
+                    if (type.GetCustomAttribute<FlowHiddenInNodeCreateAttribute>() != null)
+                        continue;
+                    var dpName = type.GetCustomAttribute<FlowNodeNameAttribute>(false);
+                    string name = dpName == null ? type.Name : string.Format("{0}({1})", dpName.Name, type.Name);
+                    tmpList.Clear();
+                    var catalogType = type;
+                    while (catalogType != null)
                     {
-                        tmpList.Add(catalog.Name);
+                        var catalog = catalogType.GetCustomAttribute<FlowNodeCatalogAttribute>(false);
+                        if (catalog != null && !string.IsNullOrEmpty(catalog.Name))
+                        {
+                            tmpList.Add(catalog.Name);
+                        }
+                        catalogType = catalogType.BaseType;
                     }
-                    catalogType = catalogType.BaseType;
+                    var root = rootTree;
+                    for (int i=tmpList.Count-1; i>=0; --i)
+                    {
+                        root = rootTree.GetChild(tmpList[i]);
+                    }
+                    root.Types.Add(new NodeTypeData { Name = name, Type = type });
                 }
-                var root = rootTree;
-                for (int i=tmpList.Count-1; i>=0; --i)
-                {
-                    root = rootTree.GetChild(tmpList[i]);
-                }
-                root.Types.Add(new NodeTypeData { Name = name, Type = type });
+                BuildTree(rootTree, 0, tree);
             }
-            BuildTree(rootTree, 0, tree);
             return tree;
         }
 

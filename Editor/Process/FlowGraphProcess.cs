@@ -6,6 +6,7 @@ namespace Flow
 {
     public static class FlowGraphProcess
     {
+        private static Dictionary<Type, IReadOnlyList<Type>> _nodeTypes = new Dictionary<Type, IReadOnlyList<Type>>();
         private static Dictionary<Type, IFlowGraphProcess> process;
         public static Dictionary<Type, IFlowGraphProcess> Process
         {
@@ -78,6 +79,37 @@ namespace Flow
             {
                 proc.OnSave(graph);
             }
+            else
+            {
+                UnityEditor.AssetDatabase.SaveAssetIfDirty(graph);
+            }
+        }
+
+        public static IReadOnlyList<Type> GetNodeTypes(FlowGraph graph)
+        {
+            var type = graph.GetType();
+            if (!_nodeTypes.TryGetValue(type, out var tys))
+            {
+                if (Process.TryGetValue(type, out var proc))
+                {
+                    var list = new List<Type>();
+                    tys = list;
+                    _nodeTypes.Add(type, tys);
+                    foreach (var assemble in AppDomain.CurrentDomain.GetAssemblies())
+                    {
+                        foreach (var t in assemble.GetTypes())
+                        {
+                            if (t.IsInterface || t.IsAbstract)
+                                continue;
+                            if (proc.CheckIsValidNodeType(t))
+                            {
+                                list.Add(t);
+                            }
+                        }
+                    }
+                }
+            }
+            return tys;
         }
     }
 }

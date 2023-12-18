@@ -21,32 +21,6 @@ namespace Flow
             return nodeViews.Find(it => it.GUID == guid);
         }
 
-        private List<System.Type> nodeTypes;
-
-        public IReadOnlyList<System.Type> NodeTypes
-        {
-            get
-            {
-                if (nodeTypes == null)
-                {
-                    nodeTypes = new List<System.Type>();
-                    foreach (var assemble in System.AppDomain.CurrentDomain.GetAssemblies())
-                    {
-                        foreach (var type in assemble.GetTypes())
-                        {
-                            if (type.IsInterface || type.IsAbstract)
-                                continue;
-                            if (Graph.Owner.CheckIsValidNodeType(type))
-                            {
-                                nodeTypes.Add(type);
-                            }
-                        }
-                    }
-                }
-                return nodeTypes;
-            }
-        }
-
         public FlowNode CreateNode(System.Type type, Vector2 position)
         {
             GraphEditorUtil.RegisterUndo(Graph.Owner, "create node");
@@ -343,7 +317,6 @@ namespace Flow
         {
             if (evt.keyCode == KeyCode.S && evt.actionKey)
             {
-                Graph.Owner.Save();
                 FlowGraphProcess.OnGraphSave(Graph.Owner);
             }
         }

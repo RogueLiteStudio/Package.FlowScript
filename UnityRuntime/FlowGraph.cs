@@ -14,14 +14,7 @@ namespace Flow
 
         public virtual bool CheckIsValidNodeType(System.Type type)
         {
-            return false;
-        }
-
-        public virtual void Save()
-        {
-#if UNITY_EDITOR
-            UnityEditor.AssetDatabase.SaveAssetIfDirty(this);
-#endif
+            return typeof(IFlowNodeData).IsAssignableFrom(type);
         }
     }
 }
