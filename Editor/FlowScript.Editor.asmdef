@@ -2,10 +2,10 @@
     "name": "FlowScript.Editor",
     "rootNamespace": "",
     "references": [
+        "Common.Runtime",
+        "Common.Unity",
         "FlowScript.Runtime",
-        "FlowScript.UnityRuntime",
-        "Serialization.Runtime",
-        "Serialization.UJson"
+        "FlowScript.UnityRuntime"
     ],
     "includePlatforms": [
         "Editor"
